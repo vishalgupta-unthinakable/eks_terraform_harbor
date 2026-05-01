@@ -228,6 +228,13 @@ resource "aws_eks_cluster" "eks" {
   version  = var.eks_version
   role_arn = aws_iam_role.eks_cluster_role.arn
 
+  enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   vpc_config {
     subnet_ids = [
       aws_subnet.private_1.id,
@@ -260,14 +267,14 @@ resource "aws_eks_node_group" "nodes" {
   ]
 
   scaling_config {
-    desired_size = 2
-    min_size     = 1
-    max_size     = 3
+    desired_size = var.node_desired_size
+    min_size     = var.node_min_size
+    max_size     = var.node_max_size
   }
 
-  instance_types = ["t3.micro"]
+  instance_types = [var.node_instance_type]
   capacity_type  = "ON_DEMAND"
-  ami_type = "AL2023_x86_64_STANDARD"
+  ami_type       = "AL2023_x86_64_STANDARD"
 
   depends_on = [
     aws_iam_role_policy_attachment.worker_node_policy,
